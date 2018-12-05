@@ -3,7 +3,7 @@
 %% @end
 %%%-------------------------------------------------------------------
 
--module(rm_sup).
+-module(clients_sup).
 
 -behaviour(supervisor).
 
@@ -11,7 +11,7 @@
 -export([start_link/0]).
 
 %% Supervisor callbacks
--export([init/1]).
+-export([init/1, new_client/1]).
 
 -define(SERVER, ?MODULE).
 
@@ -31,10 +31,11 @@ start_link() ->
 %% Before OTP 18 tuples must be used to specify a child. e.g.
 %% Child :: {Id,StartFunc,Restart,Shutdown,Type,Modules}
 init([]) ->
-    NewApp = {app_sup, {app_sup, start_link, []}, permanent, 2000, supervisor, [app_sup]},
-    ClientsSup = {clients_sup, {clients_sup, start_link, []}, permanent, 2000, supervisor, [clients_sup]},
-    {ok, {{one_for_all, 1, 1}, [NewApp,ClientsSup]}}.
+    {ok, {{one_for_all, 0, 1}, []}}.
 
 %%====================================================================
 %% Internal functions
 %%====================================================================
+
+new_client(Name) ->
+    supervisor:start_child(?SERVER, {Name, {clients, start_link, [Name]}, permanent, 2000, worker, [Name]}).
